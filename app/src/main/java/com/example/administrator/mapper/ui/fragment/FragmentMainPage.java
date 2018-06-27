@@ -1,10 +1,11 @@
-package com.example.administrator.mapper.view;
+package com.example.administrator.mapper.ui.fragment;
 
 import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -12,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
@@ -24,12 +26,14 @@ import com.amap.api.maps.LocationSource;
 import com.amap.api.maps.MapView;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.MyLocationStyle;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
 import com.example.administrator.mapper.R;
 import com.example.administrator.mapper.contact.UsageContract;
 import com.example.administrator.mapper.present.UsagePresenter;
+import com.example.administrator.mapper.weight.LoadingDialog;
 import com.example.administrator.mapper.weight.VerticalDrawerLayout;
+import com.example.administrator.mapper.weight.card.CardItem;
+import com.example.administrator.mapper.weight.card.CardPagerAdapter;
+import com.example.administrator.mapper.weight.card.ShadowTransformer;
 
 /**
  * Created by Administrator on 2018/6/24.
@@ -45,15 +49,27 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
     VerticalDrawerLayout mDrawerLayout;
     LinearLayout mArrow;
     private RecyclerView mp_ry_user;
-    private RequestQueue queue;
-    private UsagePresenter presenter;
+    private UsagePresenter usagePresenter;
+    private UsagePresenter usageMarker;
+
+    private ViewPager mViewPager;
+    private CardPagerAdapter mCardAdapter;
+    private ShadowTransformer mCardShadowTransformer;
+    private LoadingDialog.Builder builder;
+    LoadingDialog d;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View inflate = inflater.inflate(R.layout.fragment_mainpage, container, false);
+        builder = new LoadingDialog.Builder(getActivity())
+                .setCancelable(true)
+                .setMessage("加载中")
+                .setShowMessage(true);
+
+        mViewPager = (ViewPager) inflate.findViewById(R.id.viewPager);
         mMapView = (MapView) inflate.findViewById(R.id.map);
         mp_ry_user = inflate.findViewById(R.id.mp_ry_user);
-        queue = Volley.newRequestQueue(getActivity());
         mp_ry_user.setLayoutManager(new LinearLayoutManager(getActivity()));
         mMapView.onCreate(savedInstanceState);
         if (aMap == null) {
@@ -62,9 +78,7 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
         myLocationStyle = new MyLocationStyle();//初始化定位蓝点样式类myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE);//连续定位、且将视角移动到地图中心点，定位点依照设备方向旋转，并且会跟随设备移动。（1秒1次定位）如果不设置myLocationType，默认也会执行此种模式。
         myLocationStyle.interval(2000); //设置连续定位模式下的定位间隔，只在连续定位模式下生效，单次定位模式下不会生效。单位为毫秒。
         aMap.setMyLocationStyle(myLocationStyle);//设置定位蓝点的Style
-        myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATE);//定位一次，且将视角移动到地图中心点。
-//aMap.getUiSettings().setMyLocationButtonEnabled(true);设置默认定位按钮是否显示，非必需设置。
-        aMap.setMyLocationEnabled(true);// 设置为true表示启动显示定位蓝点，false表示隐藏定位蓝点并不进行定位，默认是false。
+        aMap.setMyLocationEnabled(true);
         aMap.setOnMyLocationChangeListener(this);
         // 设置定位监听
         myLocationStyle.myLocationIcon(BitmapDescriptorFactory
@@ -73,11 +87,10 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
         myLocationStyle.radiusFillColor(Color.argb(0, 0, 0, 0));
         aMap.setMyLocationStyle(myLocationStyle);//设置定位蓝点的Style
         aMap.setLocationSource(this);
-// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
         aMap.setMyLocationEnabled(true);
         aMap.getUiSettings().setZoomControlsEnabled(false);
         aMap.getUiSettings().setLogoBottomMargin(-50);
-        CameraUpdate cameraUpdate = CameraUpdateFactory.zoomTo(23);
+        CameraUpdate cameraUpdate = CameraUpdateFactory.zoomTo(17);
         mMapView.getMap().moveCamera(cameraUpdate);
         mDrawerLayout = (VerticalDrawerLayout) inflate.findViewById(R.id.vertical);
         mArrow = (LinearLayout) inflate.findViewById(R.id.center);
@@ -87,12 +100,28 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
                 mArrow.setRotation(slideOffset * 180);
             }
         });
-        presenter=new UsagePresenter(this,getActivity(),mp_ry_user);
-        presenter.showList();
+        usagePresenter = new UsagePresenter(this, getActivity(), mp_ry_user);
+        usageMarker = new UsagePresenter(this, getActivity(), aMap);
+        usagePresenter.showList();
+        usageMarker.getUsageByLatin();
+        usageMarker.addMarkers();
         mArrow.setOnClickListener(this);
+
+        mCardAdapter = new CardPagerAdapter();
+        mCardAdapter.addCardItem(new CardItem("今日话题", "Koltlin编程", "内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容"));
+        mCardAdapter.addCardItem(new CardItem("优秀推荐", "我的父亲", "内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容"));
+        mCardAdapter.addCardItem(new CardItem("散文专车", "父亲", "内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容"));
+        mCardAdapter.addCardItem(new CardItem("校园专题", "我的野蛮女友", "内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容"));
+        mCardAdapter.addCardItem(new CardItem("社会热点", "习大大发红包", "内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容"));
+        mCardAdapter.addCardItem(new CardItem("学习氛围", "无理作业不想写", "内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容内容！！"));
+
+        mCardShadowTransformer = new ShadowTransformer(mViewPager, mCardAdapter);
+        mViewPager.setAdapter(mCardAdapter);
+        mViewPager.setPageTransformer(false, mCardShadowTransformer);
+        mViewPager.setOffscreenPageLimit(3);
+        mCardShadowTransformer.enableScaling(true);
         return inflate;
     }
-
 
     @Override
     public void onDestroy() {
@@ -197,7 +226,25 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
 
     @Override
     public void showData() {
-        ///?是要new出来吗
+    }
+
+
+    @Override
+    public void showProgress() {
+        d = builder.create();
+        d.show();
+        System.out.println("请求中....");
+    }
+
+    @Override
+    public void showToast() {
+        Toast.makeText(getActivity(), "请求成功", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void stoProgress() {
+        d.dismiss();
+        System.out.println("请求中....");
     }
 
 

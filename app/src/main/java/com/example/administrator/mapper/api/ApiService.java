@@ -1,8 +1,10 @@
 package com.example.administrator.mapper.api;
 
+import com.example.administrator.mapper.entity.SingleUsage;
 import com.example.administrator.mapper.entity.Usage;
 
 import retrofit2.http.GET;
+import retrofit2.http.Query;
 import rx.Observable;
 
 /**
@@ -12,12 +14,26 @@ import rx.Observable;
 public interface ApiService {
 
     public static final String Base_URL = "http://182.254.147.87/";
+
     /**
-     *普通写法
+     * 获取文章
+     * @return
      */
     @GET("/Usage/public/index.php/index/Usage/getUsageList")
     Observable<Usage> getUsageList();
 
+    /**
+     * 添加marker
+     * @return
+     */
+    @GET("/Usage/public/index.php/index/Usage/getUsageList")
+    Observable<Usage> addMarkers();
+    /**
+     * 获取文字
+     * @return
+     */
+    @GET("/Usage/public/index.php/index/Usage/getUsageByLatin")
+    Observable<SingleUsage> getUsageByLatin(@Query("latitude") double latitude, @Query("longitude") double longitude);
 //    @GET("{url}")
 //    Observable<ResponseBody> executeGet(
 //            @Path("url") String url,

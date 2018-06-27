@@ -1,16 +1,18 @@
-package com.example.administrator.mapper;
+package com.example.administrator.mapper.ui.activity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.FrameLayout;
 
-import com.example.administrator.mapper.view.FragmentLike;
-import com.example.administrator.mapper.view.FragmentMainPage;
-import com.example.administrator.mapper.view.FragmentMyUsage;
-import com.example.administrator.mapper.view.FragmentSetting;
-import com.example.administrator.mapper.view.FragmentWrite;
+import com.example.administrator.mapper.R;
+import com.example.administrator.mapper.ui.fragment.FragmentLike;
+import com.example.administrator.mapper.ui.fragment.FragmentMainPage;
+import com.example.administrator.mapper.ui.fragment.FragmentMyUsage;
+import com.example.administrator.mapper.ui.fragment.FragmentSetting;
+import com.example.administrator.mapper.ui.fragment.FragmentWrite;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
 
@@ -42,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final int FRAGMENT_THREE = 2;
     public static final int FRAGMENT_FOURTH = 3;
     public static final int FRAGMENT_FIFTH = 4;
-    private FloatingActionButton btn_mpage, btn_musage, btn_col, btn_write, btn_set;
+    private FloatingActionButton btn_mpage, btn_musage, btn_col, btn_write, btn_set, btn_user;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,12 +52,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
         showFragment(0);
+        btn_user = (FloatingActionButton) findViewById(R.id.btn_user);
         btn_mpage = (FloatingActionButton) findViewById(R.id.btn_mainpage);
         btn_musage = (FloatingActionButton) findViewById(R.id.btn_collection);
         btn_col = (FloatingActionButton) findViewById(R.id.btn_myusage);
         btn_write = (FloatingActionButton) findViewById(R.id.btn_write);
-        multipleActions= (FloatingActionsMenu) findViewById(R.id.multiple_actions);
+        multipleActions = (FloatingActionsMenu) findViewById(R.id.multiple_actions);
         btn_set = (FloatingActionButton) findViewById(R.id.btn_setting);
+        btn_user.setOnClickListener(this);
         btn_mpage.setOnClickListener(this);
         btn_musage.setOnClickListener(this);
         btn_col.setOnClickListener(this);
@@ -156,6 +160,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_setting:
                 showFragment(4);
+                break;
+            case R.id.btn_user:
+                startActivity(new Intent(MainActivity.this, UserDetailActivity.class));
                 break;
         }
         multipleActions.collapse();

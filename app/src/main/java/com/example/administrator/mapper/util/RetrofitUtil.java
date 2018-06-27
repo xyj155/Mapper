@@ -1,12 +1,10 @@
 package com.example.administrator.mapper.util;
 
 import com.example.administrator.mapper.api.ApiService;
-import com.example.administrator.mapper.entity.Usage;
 
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
-import rx.Observable;
 
 /**
  * Created by Administrator on 2018/6/25.
@@ -33,8 +31,5 @@ public class RetrofitUtil {
     }
     public ApiService getServerices() {
         return retrofit.create(ApiService.class);
-    }
-    public Observable<Usage> getList() {
-        return getServerices().getUsageList();
     }
 }

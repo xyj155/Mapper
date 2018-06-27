@@ -1,4 +1,4 @@
-package com.example.administrator.mapper.view;
+package com.example.administrator.mapper.ui.fragment;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -11,7 +11,7 @@ import android.view.ViewGroup;
  * Created by Administrator on 2018/6/24.
  */
 
-public class FragmentWrite extends Fragment {
+public class FragmentLike extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
