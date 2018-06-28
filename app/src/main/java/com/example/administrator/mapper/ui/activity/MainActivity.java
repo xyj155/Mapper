@@ -11,7 +11,6 @@ import com.example.administrator.mapper.R;
 import com.example.administrator.mapper.ui.fragment.FragmentLike;
 import com.example.administrator.mapper.ui.fragment.FragmentMainPage;
 import com.example.administrator.mapper.ui.fragment.FragmentMyUsage;
-import com.example.administrator.mapper.ui.fragment.FragmentSetting;
 import com.example.administrator.mapper.ui.fragment.FragmentWrite;
 import com.getbase.floatingactionbutton.FloatingActionButton;
 import com.getbase.floatingactionbutton.FloatingActionsMenu;
@@ -38,7 +37,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private FragmentMyUsage fragment2;
     private FragmentLike fragment3;
     private FragmentWrite fragment4;
-    private FragmentSetting fragment5;
     private static final int FRAGMENT_ONE = 0;
     private static final int FRAGMENT_TWO = 1;
     private static final int FRAGMENT_THREE = 2;
@@ -104,14 +102,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     ft.show(fragment4);
                 }
                 break;
-            case FRAGMENT_FIFTH:
-                if (fragment5 == null) {
-                    fragment5 = new FragmentSetting();
-                    ft.add(R.id.contentContainer, fragment5);
-                } else {
-                    ft.show(fragment5);
-                }
-                break;
+
             default:
                 break;
         }
@@ -137,9 +128,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (fragment4 != null) {
             ft.hide(fragment4);
         }
-        if (fragment5 != null) {
-            ft.hide(fragment5);
-        }
+    
     }
 
 

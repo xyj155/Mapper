@@ -43,9 +43,6 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
     MapView mMapView = null;
     AMap aMap;
     MyLocationStyle myLocationStyle;
-    LocationSource.OnLocationChangedListener mListener;
-    AMapLocationClient mlocationClient;
-    AMapLocationClientOption mLocationOption;
     VerticalDrawerLayout mDrawerLayout;
     LinearLayout mArrow;
     private RecyclerView mp_ry_user;
@@ -57,7 +54,9 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
     private ShadowTransformer mCardShadowTransformer;
     private LoadingDialog.Builder builder;
     LoadingDialog d;
-
+    OnLocationChangedListener mListener;
+    AMapLocationClient mlocationClient ;
+    AMapLocationClientOption mLocationOption;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -66,7 +65,6 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
                 .setCancelable(true)
                 .setMessage("加载中")
                 .setShowMessage(true);
-
         mViewPager = (ViewPager) inflate.findViewById(R.id.viewPager);
         mMapView = (MapView) inflate.findViewById(R.id.map);
         mp_ry_user = inflate.findViewById(R.id.mp_ry_user);
@@ -75,22 +73,21 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
         if (aMap == null) {
             aMap = mMapView.getMap();
         }
+        MyLocationStyle myLocationStyle;
         myLocationStyle = new MyLocationStyle();//初始化定位蓝点样式类myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATION_ROTATE);//连续定位、且将视角移动到地图中心点，定位点依照设备方向旋转，并且会跟随设备移动。（1秒1次定位）如果不设置myLocationType，默认也会执行此种模式。
         myLocationStyle.interval(2000); //设置连续定位模式下的定位间隔，只在连续定位模式下生效，单次定位模式下不会生效。单位为毫秒。
         aMap.setMyLocationStyle(myLocationStyle);//设置定位蓝点的Style
-        aMap.setMyLocationEnabled(true);
-        aMap.setOnMyLocationChangeListener(this);
-        // 设置定位监听
+        aMap.getUiSettings().setMyLocationButtonEnabled(false);
+        aMap.getUiSettings().setZoomControlsEnabled(false);
+        aMap.setMyLocationEnabled(true);// 设置为true表示启动显示定位蓝点，false表示隐藏定位蓝点并不进行定位，默认是false。
+        myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_LOCATE );
         myLocationStyle.myLocationIcon(BitmapDescriptorFactory
-                .fromResource(R.mipmap.ic_map_location));
+                .fromBitmap(UsagePresenter.convertViewToBitmap(inflater.inflate(R.layout.map_location_marker,null))));
         myLocationStyle.strokeColor(Color.argb(0, 0, 0, 0));
         myLocationStyle.radiusFillColor(Color.argb(0, 0, 0, 0));
-        aMap.setMyLocationStyle(myLocationStyle);//设置定位蓝点的Style
-        aMap.setLocationSource(this);
-        aMap.setMyLocationEnabled(true);
-        aMap.getUiSettings().setZoomControlsEnabled(false);
+        aMap.setMyLocationStyle(myLocationStyle);
         aMap.getUiSettings().setLogoBottomMargin(-50);
-        CameraUpdate cameraUpdate = CameraUpdateFactory.zoomTo(17);
+        CameraUpdate cameraUpdate = CameraUpdateFactory.zoomTo(19);
         mMapView.getMap().moveCamera(cameraUpdate);
         mDrawerLayout = (VerticalDrawerLayout) inflate.findViewById(R.id.vertical);
         mArrow = (LinearLayout) inflate.findViewById(R.id.center);
@@ -122,6 +119,7 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
         mCardShadowTransformer.enableScaling(true);
         return inflate;
     }
+
 
     @Override
     public void onDestroy() {
@@ -201,8 +199,7 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
     @Override
     public void onLocationChanged(AMapLocation amapLocation) {
         if (mListener != null && amapLocation != null) {
-            if (amapLocation != null
-                    && amapLocation.getErrorCode() == 0) {
+            if (amapLocation != null && amapLocation.getErrorCode() == 0) {
                 mListener.onLocationChanged(amapLocation);// 显示系统小蓝点
             } else {
                 String errText = "定位失败," + amapLocation.getErrorCode() + ": " + amapLocation.getErrorInfo();
@@ -231,8 +228,8 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
 
     @Override
     public void showProgress() {
-        d = builder.create();
-        d.show();
+//        d = builder.create();
+//        d.show();
         System.out.println("请求中....");
     }
 
@@ -243,7 +240,7 @@ public class FragmentMainPage extends Fragment implements AMap.OnMyLocationChang
 
     @Override
     public void stoProgress() {
-        d.dismiss();
+//        d.dismiss();
         System.out.println("请求中....");
     }
 

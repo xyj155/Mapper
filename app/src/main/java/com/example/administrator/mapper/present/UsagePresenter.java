@@ -2,6 +2,7 @@ package com.example.administrator.mapper.present;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
@@ -13,9 +14,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amap.api.maps.AMap;
+import com.amap.api.maps.CameraUpdateFactory;
 import com.amap.api.maps.model.BitmapDescriptor;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.LatLngBounds;
 import com.amap.api.maps.model.Marker;
 import com.amap.api.maps.model.MarkerOptions;
 import com.bumptech.glide.Glide;
@@ -28,6 +31,7 @@ import com.example.administrator.mapper.contact.UsageContract;
 import com.example.administrator.mapper.entity.SingleUsage;
 import com.example.administrator.mapper.entity.Usage;
 import com.example.administrator.mapper.model.UsageModel;
+import com.example.administrator.mapper.ui.activity.UsageDetailActivity;
 import com.example.administrator.mapper.view.UsageView;
 import com.example.administrator.mapper.weight.CircleImageView;
 
@@ -37,7 +41,6 @@ import rx.Observer;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 
-import static com.amap.api.mapcore.util.cx.i;
 
 /**
  * Created by Administrator on 2018/6/25.
@@ -53,7 +56,7 @@ public class UsagePresenter implements UsageContract.Presenter {
     private RecyclerView recyclerView;
     private BitmapDescriptor bitmapDescriptor;
     private AMap map;
-    private UsageContract.View mView=new UsageView();
+    private UsageContract.View mView = new UsageView();
 
     public UsagePresenter(UsageContract.View mView, Context context, AMap map) {
         this.mView = mView;
@@ -88,7 +91,7 @@ public class UsagePresenter implements UsageContract.Presenter {
 
                     @Override
                     public void onNext(Usage usage) {
-                        if (usage.getStatus()==200){
+                        if (usage.getStatus() == 200) {
                             mView.stoProgress();
                             Log.d(TAG, "onNext() called with: usage = [" + usage + "]" + usage.getData().get(0).getContent());
                             UsageAdapter adapter = new UsageAdapter(context, usage.getData());
@@ -121,14 +124,16 @@ public class UsagePresenter implements UsageContract.Presenter {
                     @Override
                     public void onNext(final Usage usage) {
                         System.out.println("Makeradd");
+                        LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();//存放所有点的经纬度
                         if (usage.isIssuccess()) {
                             mView.stoProgress();
                             final List<Usage.DataBean> data = usage.getData();
                             for (int i = 0; i < data.size(); i++) {
                                 addMarker(data.get(i));
                                 System.out.println(data.get(i).getLongitude() + "经度");
-
+                                boundsBuilder.include(new LatLng(data.get(i).getLatitude(),data.get(i).getLongitude()));//把所有点都include进去（LatLng类型）
                             }
+                            map.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), 15));//第二个参数为四周留空宽度
                         }
                     }
                 });
@@ -140,7 +145,7 @@ public class UsagePresenter implements UsageContract.Presenter {
         map.setOnMarkerClickListener(new AMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                Log.d(TAG, "onMarkerClick() called with: marker = [" + marker + "]" + i);
+                Log.d(TAG, "onMarkerClick() called with: marker = [" + marker + "]");
                 Log.d(TAG, "onMarkerClick: " + marker.getId().replace("Marker", ""));
                 mModel.getUsageByLatin(marker.getPosition().latitude, marker.getPosition().longitude)
                         .subscribeOn(Schedulers.io())
@@ -192,6 +197,7 @@ public class UsagePresenter implements UsageContract.Presenter {
         TextView tvLocation = v.findViewById(R.id.tv_location);
         ImageView imgBanner = v.findViewById(R.id.img_banner);
         TextView tvContent = v.findViewById(R.id.tv_content);
+
         Glide.with(context).load(dataBean.getUserhead()).into(imgUserHead);
         Glide.with(context).load(dataBean.getImg()).into(imgBanner);
         tvUsername.setText(dataBean.getUsername());
@@ -199,7 +205,19 @@ public class UsagePresenter implements UsageContract.Presenter {
         tvContent.setText(dataBean.getContent());
         final Dialog dialog = builder.create();
         dialog.show();
+        v.findViewById(R.id.img_close).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dialog.dismiss();
+            }
+        });
         dialog.getWindow().setContentView(v);
+        v.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                context.startActivity(new Intent(context, UsageDetailActivity.class));
+            }
+        });
     }
 
     /**
@@ -246,6 +264,7 @@ public class UsagePresenter implements UsageContract.Presenter {
         void markerIconLoadingFinished(View view);
     }
 
+
     /**
      * 解析数据添加到地图上面
      *
@@ -258,7 +277,6 @@ public class UsagePresenter implements UsageContract.Presenter {
         String url = bean.getUserhead();
         final MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(latLng);
-
         customizeMarkerIcon(url, new OnMarkerIconLoadListener() {
             @Override
             public void markerIconLoadingFinished(View view) {
@@ -266,6 +284,8 @@ public class UsagePresenter implements UsageContract.Presenter {
                 map.addMarker(markerOptions);
             }
         });
+
+
     }
 
 }

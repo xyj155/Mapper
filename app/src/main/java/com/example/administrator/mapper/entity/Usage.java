@@ -69,6 +69,16 @@ public class Usage {
          */
 
         private int id;
+        private int userid;
+
+        public int getUserid() {
+            return userid;
+        }
+
+        public void setUserid(int userid) {
+            this.userid = userid;
+        }
+
         private String userhead;
         private String username;
         private String location;
